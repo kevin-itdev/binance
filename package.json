@@ -1,0 +1,16 @@
+{
+  "name": "tradingview-bot",
+  "version": "1.0.0",
+  "description": "",
+  "main": "bot.js",
+  "scripts": {
+    "bot": "nodemon limit.js"
+  },
+  "author": "Kevin Beltran Keena",
+  "license": "ISC",
+  "dependencies": {
+    "binance-api-node": "^0.11.40",
+    "node-binance-api": "^0.13.1",
+    "nodemon": "^2.0.18"
+  }
+}

@@ -1,0 +1,12 @@
+{
+    "instrument"    :   "BTCUSDT",
+    "buyStop"       :   "27770",
+    "buyLimit"      :   "27780",
+    "sellStop"      :   "27730",
+    "sellLimit"     :   "27720",
+    "percentage"    :   "99",
+
+
+    "apiKey"        :   "",
+    "secretKey"     :   ""
+}
