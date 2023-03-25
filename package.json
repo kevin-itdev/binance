@@ -4,7 +4,7 @@
   "description": "",
   "main": "bot.js",
   "scripts": {
-    "bot": "nodemon limit.js"
+    "bot"     : "nodemon limit.js"
   },
   "author": "Kevin Beltran Keena",
   "license": "ISC",

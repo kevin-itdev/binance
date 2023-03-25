@@ -14,25 +14,33 @@ const binance2 = Binance2({
   apiSecret: apisecret,
 });
 
-const instrument = inp.instrument;
+
+
+const instrument = inp.baseAsset.concat(inp.quoteAsset);
 const buyStop = parseFloat(inp.buyStop);
 const buyLimit = parseFloat(inp.buyLimit);
 const sellStop = parseFloat(inp.sellStop);
 const sellLimit = parseFloat(inp.sellLimit);
 const percentage = parseFloat(inp.percentage);
 var accInfo = [];
-var usdt, busd, quantity;
+var usdt, quantity;
 var placeCancel, placeDeal, orderStatus, orderSide;
   
 
 
 async function OnInit(){
 
-    let ticker = await binance.prices();
-    price = parseFloat(ticker.BTCUSDT);//or ticker.BTCBUSD
+    price = JSON.stringify(await binance2.prices({ symbol: instrument }));
+    price = parseFloat( price.substring(price.indexOf(`":"`)+`":"`.length,price.indexOf(`"}`)) );
+
 
     //Close any previous open orders, if any
     binance.openOrders(instrument, async (error, openOrders, symbol) => {
+        
+        if(error != undefined) {
+            console.log(error.body);
+            return;
+        }
 
         if(openOrders.length > 0) {
 
@@ -40,20 +48,22 @@ async function OnInit(){
 
             if(placeCancel != undefined) {
 
-                quantity = placeCancel[0].origQty;
-                if(placeCancel[0].side == "BUY")
+                if(placeCancel[0].side == "BUY") {
+                    quantity = await buyQty();
                     await orderBuy(); 
-                if(placeCancel[0].side == "SELL")
+                }
+                if(placeCancel[0].side == "SELL") {
+                    quantity =  await sellQty();
                     await orderSell(); 
+                }
             }
         }
 
         if(openOrders.length == 0) { //No opened orders, like when we start the bot for the first time.
-            quantity = await calculateQty(buyLimit);
+            quantity = await buyQty();
             await orderBuy();  
         }    
     });
-
 
     webSocket();
 }
@@ -88,12 +98,12 @@ async function webSocket() {
             if(orderStatus == "FILLED")
             {
                 if(orderSide == "BUY") { 
-                    quantity = orders[orders.length - 1].executedQty;  
+                    quantity = await sellQty();  
                     orderSell();
                 }
     
                 if(orderSide == "SELL") {
-                    quantity = await calculateQty(buyLimit);
+                    quantity = await buyQty();
                     orderBuy();
                 }
             }
@@ -106,9 +116,8 @@ async function webSocket() {
 async function orderCancel() {
     try { placeCancel = await binance.cancelAll(instrument); }
     catch(error) { console.log(error.body); } 
-    console.log("PREVIOUS ORDER CANCELLED: ",placeCancel);
+    console.log("CANCEL PREVIOUS ORDER: ",placeCancel);
     }
-
 
 
 async function orderBuy() {
@@ -133,27 +142,51 @@ async function orderSell() {
 }
 
 
-async function calculateQty(entryPrice){
+
+
+
+
+
+
+
+async function buyQty(){
+
+    let entryPrice;
+    if(buyLimit >= buyStop)
+        entryPrice = buyStop;
+    if(buyLimit <= buyStop)
+        entryPrice = buyLimit;
 
     accInfo = await binance2.accountInfo();//Get the most recent account info for our base currency (asset, free, locked)    
 
     for (let i = 0; i <= accInfo.balances.length - 1; i++) {
 
-        if (instrument.indexOf(`USDT`) != -1)
-            if (accInfo.balances[i].asset == "USDT") {
-                usdt = parseFloat((accInfo.balances[i].free)).toFixed(8) * percentage / 100;
-                quantity = parseFloat((usdt / entryPrice).toFixed(5));
-                break;
-            }
-        if (instrument.indexOf(`BUSD`) != -1)
-            if (accInfo.balances[i].asset == "BUSD") {
-                busd = parseFloat((accInfo.balances[i].free)).toFixed(8) * percentage / 100;
-                quantity = parseFloat((busd / entryPrice).toFixed(5));
-                break;
-            }
+        if (accInfo.balances[i].asset == inp.quoteAsset) {
+
+            usdt =  accInfo.balances[i].free * percentage / 100;
+            quantity = parseFloat( ( usdt / entryPrice ).toFixed(5) );
+            break;
+        }
     }
     return quantity;
-    }    
+}  
+
+
+
+async function sellQty(){
+
+    accInfo = await binance2.accountInfo();//Get the most recent account info for our base currency (asset, free, locked)    
+
+    for (let i = 0; i <= accInfo.balances.length - 1; i++) {
+
+        if (accInfo.balances[i].asset == inp.baseAsset) {
+            quantity = parseFloat( ( 0.98 * accInfo.balances[i].free ).toFixed(5) );
+            break;
+        }
+    }
+    return quantity;
+}  
+
 
 
 
@@ -162,29 +195,3 @@ async function calculateQty(entryPrice){
 
 
 OnInit();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

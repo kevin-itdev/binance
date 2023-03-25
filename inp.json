@@ -1,12 +1,17 @@
 {
-    "instrument"    :   "BTCUSDT",
-    "buyStop"       :   "27770",
-    "buyLimit"      :   "27780",
-    "sellStop"      :   "27730",
-    "sellLimit"     :   "27720",
+    "baseAsset"     :   "BTC",
+    "quoteAsset"    :   "USDT",
+
+    "buyStop"       :   "27570",
+    "buyLimit"      :   "27580",
+    "sellStop"      :   "27450",
+    "sellLimit"     :   "27440",
     "percentage"    :   "99",
 
 
     "apiKey"        :   "",
-    "secretKey"     :   ""
+    "secretKey"     :   "",
+    "mail"          :   "gmail",
+    "address"       :   "",
+    "password"      :   ""
 }
